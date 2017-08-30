@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -49,6 +50,15 @@ func GetQueueInfo(c *gin.Context) {
 	c.IndentedJSON(200,
 		Config.Services.Queue.Info(c),
 	)
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 func PostHook(c *gin.Context) {
@@ -174,6 +184,23 @@ func PostHook(c *gin.Context) {
 	if err != nil {
 		c.String(500, "Failed to generate netrc file. %s", err)
 		return
+	}
+
+	// Exclusive branch builder
+
+	if os.Getenv("DRONE_INCLUDED_BRANCHES") != "" {
+		includedBranches := strings.Split(os.Getenv("DRONE_INCLUDED_BRANCHES"), ",")
+		if !stringInSlice(build.Branch, includedBranches) {
+			c.String(200, "Branch does not match included branch param")
+			return
+		}
+	}
+	if os.Getenv("DRONE_EXCLUDED_BRANCHES") != "" {
+		exlucludedBranches := strings.Split(os.Getenv("DRONE_EXCLUDED_BRANCHES"), ",")
+		if stringInSlice(build.Branch, exlucludedBranches) {
+			c.String(200, "Branch matches excluded branch param")
+			return
+		}
 	}
 
 	// verify the branches can be built vs skipped
