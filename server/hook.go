@@ -187,19 +187,20 @@ func PostHook(c *gin.Context) {
 	}
 
 	// Exclusive branch builder
-
-	if os.Getenv("DRONE_INCLUDED_BRANCHES") != "" {
-		includedBranches := strings.Split(os.Getenv("DRONE_INCLUDED_BRANCHES"), ",")
-		if !stringInSlice(build.Branch, includedBranches) {
-			c.String(200, "Branch does not match included branch param")
-			return
+	if build.Event == model.EventPush {
+		if os.Getenv("DRONE_INCLUDED_BRANCHES") != "" {
+			includedBranches := strings.Split(os.Getenv("DRONE_INCLUDED_BRANCHES"), ",")
+			if !stringInSlice(build.Branch, includedBranches) {
+				c.String(200, "Branch does not match included branch param")
+				return
+			}
 		}
-	}
-	if os.Getenv("DRONE_EXCLUDED_BRANCHES") != "" {
-		exlucludedBranches := strings.Split(os.Getenv("DRONE_EXCLUDED_BRANCHES"), ",")
-		if stringInSlice(build.Branch, exlucludedBranches) {
-			c.String(200, "Branch matches excluded branch param")
-			return
+		if os.Getenv("DRONE_EXCLUDED_BRANCHES") != "" {
+			exlucludedBranches := strings.Split(os.Getenv("DRONE_EXCLUDED_BRANCHES"), ",")
+			if stringInSlice(build.Branch, exlucludedBranches) {
+				c.String(200, "Branch matches excluded branch param")
+				return
+			}
 		}
 	}
 
